@@ -24,6 +24,7 @@ package com.lmax.disruptor;
 public interface Cursored
 {
     /**
+     * 获取当前序列值
      * Get the current cursor value.
      *
      * @return current cursor value
