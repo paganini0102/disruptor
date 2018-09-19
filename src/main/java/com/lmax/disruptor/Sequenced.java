@@ -3,6 +3,7 @@ package com.lmax.disruptor;
 public interface Sequenced
 {
     /**
+     * 获取队列的大小
      * The capacity of the data structure to hold entries.
      *
      * @return the size of the RingBuffer.
@@ -10,6 +11,7 @@ public interface Sequenced
     int getBufferSize();
 
     /**
+     * 判断队列中是否还有可用的容量
      * Has the buffer got capacity to allocate another sequence.  This is a concurrent
      * method so the response should only be taken as an indication of available capacity.
      *
@@ -19,6 +21,7 @@ public interface Sequenced
     boolean hasAvailableCapacity(int requiredCapacity);
 
     /**
+     * 获取队列中剩余的有效容量
      * Get the remaining capacity for this sequencer.
      *
      * @return The number of slots remaining.
@@ -26,6 +29,7 @@ public interface Sequenced
     long remainingCapacity();
 
     /**
+     * 申请下一个sequence，用于事件发布者发布数据，申请失败则自旋
      * Claim the next event in sequence for publishing.
      *
      * @return the claimed sequence value
@@ -33,6 +37,7 @@ public interface Sequenced
     long next();
 
     /**
+     * 申请n个sequence，用于事件发布者发布数据，申请失败则自旋
      * Claim the next n events in sequence for publishing.  This is for batch event producing.  Using batch producing
      * requires a little care and some math.
      * <pre>
@@ -51,6 +56,7 @@ public interface Sequenced
     long next(int n);
 
     /**
+     * 尝试获取一个sequence
      * Attempt to claim the next event in sequence for publishing.  Will return the
      * number of the slot if there is at least <code>requiredCapacity</code> slots
      * available.
@@ -61,6 +67,7 @@ public interface Sequenced
     long tryNext() throws InsufficientCapacityException;
 
     /**
+     * 尝试获取n个sequence
      * Attempt to claim the next n events in sequence for publishing.  Will return the
      * highest numbered slot if there is at least <code>requiredCapacity</code> slots
      * available.  Have a look at {@link Sequencer#next()} for a description on how to
@@ -73,6 +80,7 @@ public interface Sequenced
     long tryNext(int n) throws InsufficientCapacityException;
 
     /**
+     * 发布sequence
      * Publishes a sequence. Call when the event has been filled.
      *
      * @param sequence the sequence to be published.
@@ -80,6 +88,7 @@ public interface Sequenced
     void publish(long sequence);
 
     /**
+     * 批量发布sequence
      * Batch publish sequences.  Called when all of the events have been filled.
      *
      * @param lo first sequence number to publish

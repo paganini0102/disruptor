@@ -111,6 +111,7 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
     }
 
     /**
+     * 该方法是事件发布者申请序列
      * @see Sequencer#next(int)
      */
     @Override
@@ -120,24 +121,36 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
         {
             throw new IllegalArgumentException("n must be > 0");
         }
-
+        // 获取事件发布者发布到的序列值
         long nextValue = this.nextValue;
 
         long nextSequence = nextValue + n;
+        // wrap 代表申请的序列绕一圈以后的位置
         long wrapPoint = nextSequence - bufferSize;
+        // 获取事件处理者处理到的序列值
         long cachedGatingSequence = this.cachedValue;
 
+        /** 
+         * 1.事件发布者要申请的序列值大于事件处理者当前的序列值且事件发布者要申请的序列值减去环的长度要小于事件处理者的序列值。
+         * 2.满足(1)，可以申请给定的序列。
+         * 3.不满足(1)，就需要查看一下当前事件处理者的最小的序列值(可能有多个事件处理者)。如果最小序列值大于等于
+         * 当前事件处理者的最小序列值大了一圈，那就不能申请了序列(申请了就会被覆盖)
+         */
         if (wrapPoint > cachedGatingSequence || cachedGatingSequence > nextValue)
         {
+        	// wrapPoint > cachedGatingSequence 代表绕一圈并且位置大于事件处理者处理到的序列
+            // cachedGatingSequence > nextValue 说明事件发布者的位置位于事件处理者的屁股后面
+            // 维护父类中事件生产者的序列
             cursor.setVolatile(nextValue);  // StoreLoad fence
 
             long minSequence;
+            // 如果事件生产者绕一圈以后大于事件处理者的序列，那么会在此处自旋
             while (wrapPoint > (minSequence = Util.getMinimumSequence(gatingSequences, nextValue)))
             {
                 waitStrategy.signalAllWhenBlocking();
                 LockSupport.parkNanos(1L); // TODO: Use waitStrategy to spin?
             }
-
+            // 缓存最小值
             this.cachedValue = minSequence;
         }
 
@@ -199,6 +212,7 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
     }
 
     /**
+     * 事件发布调用的方法。唤醒阻塞的消费者
      * @see Sequencer#publish(long)
      */
     @Override

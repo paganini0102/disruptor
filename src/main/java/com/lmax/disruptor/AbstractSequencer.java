@@ -27,15 +27,20 @@ import com.lmax.disruptor.util.Util;
  */
 public abstract class AbstractSequencer implements Sequencer
 {
+	// 用来对gatingSequences做原子操作的。Sequence[]里面存储的是事件处理者处理到的序列
     private static final AtomicReferenceFieldUpdater<AbstractSequencer, Sequence[]> SEQUENCE_UPDATER =
         AtomicReferenceFieldUpdater.newUpdater(AbstractSequencer.class, Sequence[].class, "gatingSequences");
-
+    // 队列大小
     protected final int bufferSize;
+    // 等待策略
     protected final WaitStrategy waitStrategy;
+    // 事件发布者的已经发布到的sequence   
     protected final Sequence cursor = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
+    // 事件处理者处理到的序列对象
     protected volatile Sequence[] gatingSequences = new Sequence[0];
 
     /**
+     * 检查队列大小是否是2^n，判断buffersize大小
      * Create with the specified buffer size and wait strategy.
      *
      * @param bufferSize   The total number of entries, must be a positive power of 2.
@@ -57,6 +62,7 @@ public abstract class AbstractSequencer implements Sequencer
     }
 
     /**
+     * 获取事件发布者的序列
      * @see Sequencer#getCursor()
      */
     @Override
@@ -66,6 +72,7 @@ public abstract class AbstractSequencer implements Sequencer
     }
 
     /**
+     * 获取大小
      * @see Sequencer#getBufferSize()
      */
     @Override
@@ -75,6 +82,7 @@ public abstract class AbstractSequencer implements Sequencer
     }
 
     /**
+     * 把事件消费者序列维护到gating sequence
      * @see Sequencer#addGatingSequences(Sequence...)
      */
     @Override
@@ -84,6 +92,7 @@ public abstract class AbstractSequencer implements Sequencer
     }
 
     /**
+     * 从gating sequence移除序列
      * @see Sequencer#removeGatingSequence(Sequence)
      */
     @Override
@@ -93,6 +102,7 @@ public abstract class AbstractSequencer implements Sequencer
     }
 
     /**
+     * 获取gating sequence中事件处理者处理到最小的序列值
      * @see Sequencer#getMinimumSequence()
      */
     @Override
@@ -102,6 +112,7 @@ public abstract class AbstractSequencer implements Sequencer
     }
 
     /**
+     * 创建了一个序列栅栏
      * @see Sequencer#newBarrier(Sequence...)
      */
     @Override

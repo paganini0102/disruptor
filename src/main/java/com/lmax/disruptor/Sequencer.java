@@ -21,11 +21,13 @@ package com.lmax.disruptor;
 public interface Sequencer extends Cursored, Sequenced
 {
     /**
+     * 游标初始值
      * Set to -1 as sequence starting point
      */
     long INITIAL_CURSOR_VALUE = -1L;
 
     /**
+     * 初始化RingBuffer为指定的sequence
      * Claim a specific sequence.  Only used if initialising the ring buffer to
      * a specific value.
      *
@@ -34,6 +36,7 @@ public interface Sequencer extends Cursored, Sequenced
     void claim(long sequence);
 
     /**
+     * 消费者调用，判断sequence是否可以消费
      * Confirms if a sequence is published and the event is available for use; non-blocking.
      *
      * @param sequence of the buffer to check
@@ -42,6 +45,7 @@ public interface Sequencer extends Cursored, Sequenced
     boolean isAvailable(long sequence);
 
     /**
+     * 将sequence添加到gating sequences中
      * Add the specified gating sequences to this instance of the Disruptor.  They will
      * safely and atomically added to the list of gating sequences.
      *
@@ -50,6 +54,7 @@ public interface Sequencer extends Cursored, Sequenced
     void addGatingSequences(Sequence... gatingSequences);
 
     /**
+     * 从gating sequences中移除指定的sequence
      * Remove the specified sequence from this sequencer.
      *
      * @param sequence to be removed.
@@ -58,6 +63,7 @@ public interface Sequencer extends Cursored, Sequenced
     boolean removeGatingSequence(Sequence sequence);
 
     /**
+     * 事件处理者用来追踪ringBuffer中可以用的sequence
      * Create a new SequenceBarrier to be used by an EventProcessor to track which messages
      * are available to be read from the ring buffer given a list of sequences to track.
      *
@@ -68,6 +74,7 @@ public interface Sequencer extends Cursored, Sequenced
     SequenceBarrier newBarrier(Sequence... sequencesToTrack);
 
     /**
+     * 事件发布者获取gating sequence中最小的sequence
      * Get the minimum sequence value from all of the gating sequences
      * added to this ringBuffer.
      *
@@ -77,6 +84,7 @@ public interface Sequencer extends Cursored, Sequenced
     long getMinimumSequence();
 
     /**
+     * 消费者用来获取从nextSequence到availableSequence之间最大的sequence。如果是多线程生产者判断nextSequence是否可用，否则返回nextSequence-1。单线程直接返回availableSequence
      * Get the highest sequence number that can be safely read from the ring buffer.  Depending
      * on the implementation of the Sequencer this call may need to scan a number of values
      * in the Sequencer.  The scan will range from nextSequence to availableSequence.  If
