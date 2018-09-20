@@ -167,6 +167,7 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
     }
 
     /**
+     * 创建一个单个生产者的RingBuffer并且指定一个等待策略
      * Create a new single producer RingBuffer with the specified wait strategy.
      *
      * @param <E> Class of the event stored in the ring buffer.
@@ -182,6 +183,7 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
         int bufferSize,
         WaitStrategy waitStrategy)
     {
+    	// 这里初始化SingleProducerSequencer
         SingleProducerSequencer sequencer = new SingleProducerSequencer(bufferSize, waitStrategy);
 
         return new RingBuffer<E>(factory, sequencer);

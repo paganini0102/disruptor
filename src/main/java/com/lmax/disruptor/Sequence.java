@@ -45,15 +45,20 @@ class RhsPadding extends Value
  */
 public class Sequence extends RhsPadding
 {
+	// 定义初始值
     static final long INITIAL_VALUE = -1L;
+    // Java无法直接访问底层操作系统，而是通过本地（native）方法来访问。不过尽管如此，JVM还是开了一个后门，JDK中有一个类Unsafe，它提供了硬件级别的原子操作。
     private static final Unsafe UNSAFE;
+    // value的偏移量
     private static final long VALUE_OFFSET;
 
     static
     {
+    	// 获取unsafe
         UNSAFE = Util.getUnsafe();
         try
         {
+        	// 获取value偏移量
             VALUE_OFFSET = UNSAFE.objectFieldOffset(Value.class.getDeclaredField("value"));
         }
         catch (final Exception e)
@@ -63,6 +68,7 @@ public class Sequence extends RhsPadding
     }
 
     /**
+     * 调用Sequence(final long initialValue)初始化
      * Create a sequence initialised to -1.
      */
     public Sequence()
@@ -71,6 +77,7 @@ public class Sequence extends RhsPadding
     }
 
     /**
+     * 修改value的值
      * Create a sequence with a specified initial value.
      *
      * @param initialValue The initial value for this sequence.
@@ -81,6 +88,7 @@ public class Sequence extends RhsPadding
     }
 
     /**
+     * 返回value
      * Perform a volatile read of this sequence's value.
      *
      * @return The current value of the sequence.
@@ -91,6 +99,7 @@ public class Sequence extends RhsPadding
     }
 
     /**
+     * 修改value的值，这个value是普通变量。
      * Perform an ordered write of this sequence.  The intent is
      * a Store/Store barrier between this write and any previous
      * store.
@@ -103,6 +112,8 @@ public class Sequence extends RhsPadding
     }
 
     /**
+     * 在当前写操作和任意之前的读操作之间加入Store/Store屏障 
+     * 在当前写操作和任意之后的读操作之间加入Store/Load屏障 
      * Performs a volatile write of this sequence.  The intent is
      * a Store/Store barrier between this write and any previous
      * write and a Store/Load barrier between this write and any
@@ -116,6 +127,7 @@ public class Sequence extends RhsPadding
     }
 
     /**
+     * 使用cas修改内存中value的值
      * Perform a compare and set operation on the sequence.
      *
      * @param expectedValue The expected current value.
@@ -128,6 +140,7 @@ public class Sequence extends RhsPadding
     }
 
     /**
+     * 自增，并且返回
      * Atomically increment the sequence by one.
      *
      * @return The value after the increment
@@ -138,6 +151,7 @@ public class Sequence extends RhsPadding
     }
 
     /**
+     * 原始值增加increment
      * Atomically add the supplied value.
      *
      * @param increment The value to add to the sequence.
