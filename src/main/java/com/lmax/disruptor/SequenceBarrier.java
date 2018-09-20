@@ -23,6 +23,7 @@ package com.lmax.disruptor;
 public interface SequenceBarrier
 {
     /**
+     * 等待一个序列变为可用，然后消费这个序列。消费线程中使用
      * Wait for the given sequence to be available for consumption.
      *
      * @param sequence to wait for
@@ -34,6 +35,7 @@ public interface SequenceBarrier
     long waitFor(long sequence) throws AlertException, InterruptedException, TimeoutException;
 
     /**
+     * 获取当前可以读取的序列值。
      * Get the current cursor value that can be read.
      *
      * @return value of the cursor for entries that have been published.
@@ -41,6 +43,7 @@ public interface SequenceBarrier
     long getCursor();
 
     /**
+     * 当前栅栏是否发过通知。
      * The current alert status for the barrier.
      *
      * @return true if in alert otherwise false.
@@ -48,16 +51,19 @@ public interface SequenceBarrier
     boolean isAlerted();
 
     /**
+     * 通知消费者状态变化，然后停留在这个状态上，直到状态被清除。
      * Alert the {@link EventProcessor}s of a status change and stay in this status until cleared.
      */
     void alert();
 
     /**
+     * 清楚通知状态。
      * Clear the current alert status.
      */
     void clearAlert();
 
     /**
+     * 检测是否发生了通知，如果已经发生了抛出AlertException异常。
      * Check if an alert has been raised and throw an {@link AlertException} if it has.
      *
      * @throws AlertException if alert has been raised.

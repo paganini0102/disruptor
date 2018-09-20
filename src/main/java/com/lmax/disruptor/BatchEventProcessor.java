@@ -109,43 +109,54 @@ public final class BatchEventProcessor<T>
     @Override
     public void run()
     {
+    	// 线程已经启动
         if (!running.compareAndSet(false, true))
         {
             throw new IllegalStateException("Thread is already running");
         }
+        // 清除中断状态
         sequenceBarrier.clearAlert();
-
+        // 判断一下消费者是否实现了LifecycleAware，如果实现了这个接口，那么此时会发送一个启动通知
         notifyStart();
 
+        // 定义一个event
         T event = null;
+        // 获取要申请的序列
         long nextSequence = sequence.get() + 1L;
         try
         {
+        	// 循环处理事件。除非超时或者中断。
             while (true)
             {
                 try
                 {
+                	// 根据等待策略来等待可用的序列值。 
                     final long availableSequence = sequenceBarrier.waitFor(nextSequence);
                     if (batchStartAware != null)
                     {
                         batchStartAware.onBatchStart(availableSequence - nextSequence + 1);
                     }
 
+                    // 根据可用的序列值获取事件。批量处理nextSequence到availableSequence之间的事件。
                     while (nextSequence <= availableSequence)
                     {
+                    	// 获取事件
                         event = dataProvider.get(nextSequence);
+                        // 触发事件
                         eventHandler.onEvent(event, nextSequence, nextSequence == availableSequence);
                         nextSequence++;
                     }
-
+                    // 设置事件处理者处理到的序列值。事件发布者会根据availableSequence判断是否发布事件
                     sequence.set(availableSequence);
                 }
                 catch (final TimeoutException e)
                 {
+                	// 超时异常
                     notifyTimeout(sequence.get());
                 }
                 catch (final AlertException ex)
                 {
+                	// 中断异常
                     if (!running.get())
                     {
                         break;
@@ -153,7 +164,9 @@ public final class BatchEventProcessor<T>
                 }
                 catch (final Throwable ex)
                 {
+                	// 这里可能用户消费者事件出错。如果自己实现了ExceptionHandler那么就不会影响继续消费
                     exceptionHandler.handleEventException(ex, nextSequence, event);
+                    // 如果出现异常则设置为nextSequence
                     sequence.set(nextSequence);
                     nextSequence++;
                 }

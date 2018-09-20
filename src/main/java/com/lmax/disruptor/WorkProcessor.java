@@ -109,10 +109,11 @@ public final class WorkProcessor<T>
         {
             throw new IllegalStateException("Thread is already running");
         }
+        // 清除中断状态
         sequenceBarrier.clearAlert();
-
+        // 判断一下消费者是否实现了LifecycleAware ,如果实现了这个接口，那么此时会发送一个启动通知
         notifyStart();
-
+        // 事件处理标志
         boolean processedSequence = true;
         long cachedAvailableSequence = Long.MIN_VALUE;
         long nextSequence = sequence.get();
@@ -126,25 +127,34 @@ public final class WorkProcessor<T>
                 // typically, this will be true
                 // this prevents the sequence getting too far forward if an exception
                 // is thrown from the WorkHandler
+            	// 判断上一个事件是否已经处理完毕。
                 if (processedSequence)
                 {
+                	// 置为false
                     processedSequence = false;
                     do
                     {
+                    	// 获取下一个序列
                         nextSequence = workSequence.get() + 1L;
+                        // 更新当前已经处理到的
                         sequence.set(nextSequence - 1L);
                     }
+                    // 多个WorkProcessor共享一个workSequence，可以实现互斥消费，因为只有一个线程可以CAS更新成功
                     while (!workSequence.compareAndSet(nextSequence - 1L, nextSequence));
                 }
-
+                // 检查序列值是否需要申请。
                 if (cachedAvailableSequence >= nextSequence)
                 {
+                	// 获取事件
                     event = ringBuffer.get(nextSequence);
+                    // 交给workHandler处理事件。  
                     workHandler.onEvent(event);
+                    // 设置事件处理完成标识
                     processedSequence = true;
                 }
                 else
                 {
+                	// 申请可用序列
                     cachedAvailableSequence = sequenceBarrier.waitFor(nextSequence);
                 }
             }
@@ -161,6 +171,7 @@ public final class WorkProcessor<T>
             }
             catch (final Throwable ex)
             {
+            	// 设置异常事件处理
                 // handle, mark as processed, unless the exception handler threw an exception
                 exceptionHandler.handleEventException(ex, nextSequence, event);
                 processedSequence = true;
@@ -168,7 +179,7 @@ public final class WorkProcessor<T>
         }
 
         notifyShutdown();
-
+        // 停止
         running.set(false);
     }
 

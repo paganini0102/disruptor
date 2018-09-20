@@ -23,6 +23,7 @@ package com.lmax.disruptor;
 public interface EventProcessor extends Runnable
 {
     /**
+     * 获取事件处理器使用的序列引用。 
      * Get a reference to the {@link Sequence} being used by this {@link EventProcessor}.
      *
      * @return reference to the {@link Sequence} for this {@link EventProcessor}
@@ -30,10 +31,15 @@ public interface EventProcessor extends Runnable
     Sequence getSequence();
 
     /**
+     * 中断
      * Signal that this EventProcessor should stop when it has finished consuming at the next clean break.
      * It will call {@link SequenceBarrier#alert()} to notify the thread to check status.
      */
     void halt();
 
+    /**
+     * 判断是否运行
+     * @return
+     */
     boolean isRunning();
 }

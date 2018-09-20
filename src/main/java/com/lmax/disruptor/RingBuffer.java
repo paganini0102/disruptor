@@ -28,13 +28,17 @@ abstract class RingBufferPad
 
 abstract class RingBufferFields<E> extends RingBufferPad
 {
+	// Buffer数组填充
     private static final int BUFFER_PAD;
+    // Buffer数组起始地址
     private static final long REF_ARRAY_BASE;
+    // 数组引用每个引用占用的大小为2^REF_ELEMENT_SHIFT
     private static final int REF_ELEMENT_SHIFT;
     private static final Unsafe UNSAFE = Util.getUnsafe();
 
     static
     {
+    	// 获取Object[]引用大小
         final int scale = UNSAFE.arrayIndexScale(Object[].class);
         if (4 == scale)
         {
@@ -48,14 +52,17 @@ abstract class RingBufferFields<E> extends RingBufferPad
         {
             throw new IllegalStateException("Unknown pointer size");
         }
+        // 填充32或者16
         BUFFER_PAD = 128 / scale;
         // Including the buffer pad in the array base offset
         REF_ARRAY_BASE = UNSAFE.arrayBaseOffset(Object[].class) + (BUFFER_PAD << REF_ELEMENT_SHIFT);
     }
 
     private final long indexMask;
+    // 保存了RingBuffer每个槽的Event对象。这个entries不会被修改。
     private final Object[] entries;
     protected final int bufferSize;
+    // SingleProducerSequencer或者MultiProducerSequencer的引用
     protected final Sequencer sequencer;
 
     RingBufferFields(
@@ -79,6 +86,10 @@ abstract class RingBufferFields<E> extends RingBufferPad
         fill(eventFactory);
     }
 
+    /**
+     * 填充entries
+     * @param eventFactory
+     */
     private void fill(EventFactory<E> eventFactory)
     {
         for (int i = 0; i < bufferSize; i++)
