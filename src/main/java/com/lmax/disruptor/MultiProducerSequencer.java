@@ -32,16 +32,20 @@ import com.lmax.disruptor.util.Util;
  */
 public final class MultiProducerSequencer extends AbstractSequencer
 {
+	// 获取unsafe
     private static final Unsafe UNSAFE = Util.getUnsafe();
+    // 获取int[]的偏移量
     private static final long BASE = UNSAFE.arrayBaseOffset(int[].class);
+    // 获取元素的大小，也就是int的大小4个字节
     private static final long SCALE = UNSAFE.arrayIndexScale(int[].class);
-
+    // gatingSequenceCache是gatingSequence。用来标识事件处理者的序列
     private final Sequence gatingSequenceCache = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
-
+    // availableBuffer用来追踪每个槽的状态
     // availableBuffer tracks the state of each ringbuffer slot
     // see below for more details on the approach
     private final int[] availableBuffer;
     private final int indexMask;
+    // 圈数
     private final int indexShift;
 
     /**
@@ -52,10 +56,14 @@ public final class MultiProducerSequencer extends AbstractSequencer
      */
     public MultiProducerSequencer(int bufferSize, final WaitStrategy waitStrategy)
     {
+    	// 初始化父类
         super(bufferSize, waitStrategy);
+        // 初始化availableBuffer
         availableBuffer = new int[bufferSize];
         indexMask = bufferSize - 1;
         indexShift = Util.log2(bufferSize);
+        // 这个逻辑是。计算availableBuffer中每个元素的偏移量
+        // 定位数组每个值的地址就是(index * SCALE) + BASE
         initialiseAvailableBuffer();
     }
 
@@ -121,14 +129,24 @@ public final class MultiProducerSequencer extends AbstractSequencer
 
         do
         {
+        	// 获取事件发布者发布序列
             current = cursor.get();
+            // 新序列位置
             next = current + n;
-
+            // wrap 代表申请的序列绕一圈以后的位置
             long wrapPoint = next - bufferSize;
+            // 获取事件处理者处理到的序列值
             long cachedGatingSequence = gatingSequenceCache.get();
-
+            /** 
+             * 1.事件发布者要申请的序列值大于事件处理者当前的序列值且事件发布者要申请的序列值减去环的长度要小于事件处理者的序列值。
+             * 2.满足(1)，可以申请给定的序列。
+             * 3.不满足(1)，就需要查看一下当前事件处理者的最小的序列值（可能有多个事件处理者）。如果最小序列值大于等于当前事件处理者的最小序列值大了一圈，那就不能申请了序列（申请了就会被覆盖）
+             */
             if (wrapPoint > cachedGatingSequence || cachedGatingSequence > current)
             {
+            	// wrapPoint > cachedGatingSequence 代表绕一圈并且位置大于事件处理者处理到的序列
+                // cachedGatingSequence > current 说明事件发布者的位置位于事件处理者的屁股后面
+                // 获取最小的事件处理者序列
                 long gatingSequence = Util.getMinimumSequence(gatingSequences, current);
 
                 if (wrapPoint > gatingSequence)
@@ -137,10 +155,10 @@ public final class MultiProducerSequencer extends AbstractSequencer
                     LockSupport.parkNanos(1); // TODO, should we spin based on the wait strategy?
                     continue;
                 }
-
+                // 赋值
                 gatingSequenceCache.set(gatingSequence);
             }
-            else if (cursor.compareAndSet(current, next))
+            else if (cursor.compareAndSet(current, next)) // 通过cas修改
             {
                 break;
             }
@@ -215,6 +233,7 @@ public final class MultiProducerSequencer extends AbstractSequencer
     @Override
     public void publish(final long sequence)
     {
+    	// 这里的操作逻辑大概是修改数组中的序列值
         setAvailable(sequence);
         waitStrategy.signalAllWhenBlocking();
     }
@@ -259,6 +278,7 @@ public final class MultiProducerSequencer extends AbstractSequencer
     private void setAvailableBufferValue(int index, int flag)
     {
         long bufferAddress = (index * SCALE) + BASE;
+        // 修改内存偏移地址为bufferAddress的值，改为flag
         UNSAFE.putOrderedInt(availableBuffer, bufferAddress, flag);
     }
 
@@ -290,11 +310,13 @@ public final class MultiProducerSequencer extends AbstractSequencer
 
     private int calculateAvailabilityFlag(final long sequence)
     {
+    	// 计算数组中的存储的数据
         return (int) (sequence >>> indexShift);
     }
 
     private int calculateIndex(final long sequence)
     {
+    	// 计算数组中位置 sequence & (buffsize - 1)
         return ((int) sequence) & indexMask;
     }
 }
