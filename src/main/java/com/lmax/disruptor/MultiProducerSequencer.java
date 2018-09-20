@@ -291,16 +291,19 @@ public final class MultiProducerSequencer extends AbstractSequencer
         int index = calculateIndex(sequence);
         int flag = calculateAvailabilityFlag(sequence);
         long bufferAddress = (index * SCALE) + BASE;
+        // 相应位置上的值相等，说明已经发布该序列
         return UNSAFE.getIntVolatile(availableBuffer, bufferAddress) == flag;
     }
 
     @Override
     public long getHighestPublishedSequence(long lowerBound, long availableSequence)
     {
+    	// 从数组中找出未发布序列，即由小到大连续的发布序列
         for (long sequence = lowerBound; sequence <= availableSequence; sequence++)
         {
             if (!isAvailable(sequence))
             {
+            	// 返回未发布序列的前一个序列
                 return sequence - 1;
             }
         }

@@ -243,6 +243,7 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
     @Override
     public long getHighestPublishedSequence(long lowerBound, long availableSequence)
     {
+    	// 返回最大序列availableSequence
         return availableSequence;
     }
 }
