@@ -121,14 +121,14 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
         {
             throw new IllegalArgumentException("n must be > 0");
         }
-        // 获取事件发布者发布到的序列值
-        long nextValue = this.nextValue;
+
+        long nextValue = this.nextValue; // 获取事件发布者发布到的序列值
 
         long nextSequence = nextValue + n;
-        // wrap 代表申请的序列绕一圈以后的位置
-        long wrapPoint = nextSequence - bufferSize;
-        // 获取事件处理者处理到的序列值
-        long cachedGatingSequence = this.cachedValue;
+
+        long wrapPoint = nextSequence - bufferSize;  // wrap代表申请的序列绕一圈以后的位置
+
+        long cachedGatingSequence = this.cachedValue; // 获取事件处理者处理到的序列值
 
         /** 
          * 1.事件发布者要申请的序列值大于事件处理者当前的序列值且事件发布者要申请的序列值减去环的长度要小于事件处理者的序列值。
@@ -150,8 +150,8 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
                 waitStrategy.signalAllWhenBlocking();
                 LockSupport.parkNanos(1L); // TODO: Use waitStrategy to spin?
             }
-            // 缓存最小值
-            this.cachedValue = minSequence;
+
+            this.cachedValue = minSequence; // 缓存最小值
         }
 
         this.nextValue = nextSequence;
