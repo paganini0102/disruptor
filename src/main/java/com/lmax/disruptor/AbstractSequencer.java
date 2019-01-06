@@ -27,16 +27,16 @@ import com.lmax.disruptor.util.Util;
  */
 public abstract class AbstractSequencer implements Sequencer
 {
-	// 用来对gatingSequences做原子操作的。Sequence[]里面存储的是事件处理者处理到的序列
+	/** 用来对gatingSequences做原子操作的。Sequence[]里面存储的是事件处理者处理到的序列 */
     private static final AtomicReferenceFieldUpdater<AbstractSequencer, Sequence[]> SEQUENCE_UPDATER =
         AtomicReferenceFieldUpdater.newUpdater(AbstractSequencer.class, Sequence[].class, "gatingSequences");
-    // 队列大小
+    /** 队列大小 */
     protected final int bufferSize;
-    // 等待策略
+    /** 等待策略 */
     protected final WaitStrategy waitStrategy;
-    // 事件发布者的已经发布到的sequence   
+    /** 事件发布者的已经发布到的sequence */
     protected final Sequence cursor = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
-    // 事件处理者处理到的序列对象
+    /** 事件处理者处理到的序列对象 */
     protected volatile Sequence[] gatingSequences = new Sequence[0];
 
     /**

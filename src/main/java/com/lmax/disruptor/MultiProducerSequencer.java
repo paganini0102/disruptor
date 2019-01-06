@@ -32,20 +32,20 @@ import com.lmax.disruptor.util.Util;
  */
 public final class MultiProducerSequencer extends AbstractSequencer
 {
-	// 获取unsafe
+     /** 获取unsafe */
     private static final Unsafe UNSAFE = Util.getUnsafe();
-    // 获取int[]的偏移量
+    /** 获取int[]的偏移量 */
     private static final long BASE = UNSAFE.arrayBaseOffset(int[].class);
-    // 获取元素的大小，也就是int的大小4个字节
+    /** 获取元素的大小，也就是int的大小4个字节 */
     private static final long SCALE = UNSAFE.arrayIndexScale(int[].class);
-    // gatingSequenceCache是gatingSequence。用来标识事件处理者的序列
+    /** gatingSequenceCache是gatingSequence。用来标识事件处理者的序列 */
     private final Sequence gatingSequenceCache = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
-    // availableBuffer用来追踪每个槽的状态
+    /** availableBuffer用来追踪每个槽的状态 */
     // availableBuffer tracks the state of each ringbuffer slot
     // see below for more details on the approach
     private final int[] availableBuffer;
     private final int indexMask;
-    // 圈数
+    /** 圈数 */
     private final int indexShift;
 
     /**
