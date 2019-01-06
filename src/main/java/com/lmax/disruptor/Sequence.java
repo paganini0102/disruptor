@@ -45,11 +45,11 @@ class RhsPadding extends Value
  */
 public class Sequence extends RhsPadding
 {
-	// 定义初始值
+	/** 定义初始值 */
     static final long INITIAL_VALUE = -1L;
-    // Java无法直接访问底层操作系统，而是通过本地（native）方法来访问。不过尽管如此，JVM还是开了一个后门，JDK中有一个类Unsafe，它提供了硬件级别的原子操作。
+    /** Java无法直接访问底层操作系统，而是通过本地（native）方法来访问。不过尽管如此，JVM还是开了一个后门，JDK中有一个类Unsafe，它提供了硬件级别的原子操作 */
     private static final Unsafe UNSAFE;
-    // value的偏移量
+     /** value的偏移量 */
     private static final long VALUE_OFFSET;
 
     static

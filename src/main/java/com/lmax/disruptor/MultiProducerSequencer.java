@@ -129,14 +129,14 @@ public final class MultiProducerSequencer extends AbstractSequencer
 
         do
         {
-        	// 获取事件发布者发布序列
-            current = cursor.get();
-            // 新序列位置
-            next = current + n;
-            // wrap 代表申请的序列绕一圈以后的位置
-            long wrapPoint = next - bufferSize;
-            // 获取事件处理者处理到的序列值
-            long cachedGatingSequence = gatingSequenceCache.get();
+
+            current = cursor.get(); // 获取事件发布者发布序列
+
+            next = current + n; // 新序列位置
+
+            long wrapPoint = next - bufferSize; // wrap 代表申请的序列绕一圈以后的位置
+
+            long cachedGatingSequence = gatingSequenceCache.get(); // 获取事件处理者处理到的序列值
             /** 
              * 1.事件发布者要申请的序列值大于事件处理者当前的序列值且事件发布者要申请的序列值减去环的长度要小于事件处理者的序列值。
              * 2.满足(1)，可以申请给定的序列。
